@@ -1,0 +1,23 @@
+[project]
+name = "hackdia26"
+version = "0.1.0"
+description = "HackDIA26 using crewAI"
+authors = [{ name = "Your Name", email = "you@example.com" }]
+requires-python = ">=3.10,<3.13"
+dependencies = [
+    "crewai[tools]>=0.108.0,<1.0.0"
+]
+
+[project.scripts]
+hackdia26 = "hackdia26.main:run"
+run_crew = "hackdia26.main:run"
+train = "hackdia26.main:train"
+replay = "hackdia26.main:replay"
+test = "hackdia26.main:test"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.crewai]
+type = "crew"
