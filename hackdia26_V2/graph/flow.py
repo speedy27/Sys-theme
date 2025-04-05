@@ -9,11 +9,11 @@ from enum import Enum
 
 # Importation de LangGraph
 from langgraph.graph import StateGraph, START, END
-from langgraph.checkpoint import MemorySaver
+#from langgraph.checkpoint import MemorySaver
+# from langgraph.checkpoint import Checkpoint, CheckpointState
 from pydantic import BaseModel, Field
 
 # Importation des agents
-from agents.email_scanner import EmailScannerAgent
 from agents.link_analyzer import LinkAnalyzerAgent
 from agents.nlp_analyzer import NLPAnalyzerAgent
 from agents.report_generator import ReportGeneratorAgent
@@ -237,7 +237,7 @@ def create_agent_graph(llm):
     graph.add_edge(WorkflowState.CRITICAL, END)
     
     # Création du sauvegardeur de points de contrôle
-    memory = MemorySaver()
+    # memory = MemorySaver()
     
     # Compilation du graphe avec sauvegarde des états
     compiled_graph = graph.compile(checkpointer=memory)
