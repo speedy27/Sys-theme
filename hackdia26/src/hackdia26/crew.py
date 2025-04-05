@@ -24,19 +24,9 @@ class Hackdia26():
             verbose=True
         )
     
-    @agent
-    def phishing_detector(self) -> Agent:
-        return Agent(
-            config=self.agents_config['phishing_detector'],
-            verbose=True
-        )
+    
 
-    @agent
-    def reporting_analyst(self) -> Agent:
-        return Agent(
-            config=self.agents_config['reporting_analyst'],
-            verbose=True
-        )
+   
 
     # To learn more about structured task outputs,
     # task dependencies, and task callbacks, check out the documentation:
@@ -47,12 +37,7 @@ class Hackdia26():
             config=self.tasks_config['email_analysis_task'],
         )
 
-    @task
-    def reporting_task(self) -> Task:
-        return Task(
-            config=self.tasks_config['reporting_task'],
-            output_file='report.md'
-        )
+
 
     @crew
     def crew(self) -> Crew:

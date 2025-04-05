@@ -9,12 +9,5 @@ email_content_analyst:
     qu’il s’agisse de demandes urgentes, de formulations inhabituelles ou de tentatives de manipulation.
 
 
-phishing_detector:
-  role: >
-    {topic} Phishing Detection Specialist
-  goal: >
-    Analyze incoming text to detect potential phishing indicators such as urgency, emotional manipulation, suspicious promotions, or requests for sensitive information.
-  backstory: >
-    YYou're an expert in cybersecurity with a focus on detecting phishing attempts. You have a deep understanding of common phishing tactics and are skilled at identifying 
-    subtle cues in text that may indicate malicious intent.
+
     
