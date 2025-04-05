@@ -26,6 +26,8 @@ def run():
     
     try:
         Hackdia26().crew().kickoff(inputs=inputs)
+        # Affiche les résultats
+        print("Résultats de la crew :", inputs)
     except Exception as e:
         raise Exception(f"An error occurred while running the crew: {e}")
 
