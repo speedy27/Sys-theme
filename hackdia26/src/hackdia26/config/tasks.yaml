@@ -1,11 +1,16 @@
-research_task:
+email_analysis_task:
   description: >
-    Conduct a thorough research about {topic}
-    Make sure you find any interesting and relevant information given
-    the current year is {current_year}.
+    Analyse le contenu textuel suivant pour identifier s’il contient des signes de fraude, d’hameçonnage (phishing) ou de tentative d’arnaque.
+    Tu dois uniquement te baser sur le texte (pas sur les liens ni les pièces jointes).
+    Voici le mail à analyser : {mail}
   expected_output: >
-    A list with 10 bullet points of the most relevant information about {topic}
-  agent: researcher
+    Un rapport clair indiquant :
+    - Si le message semble suspect ou non
+    - Les signaux ou expressions qui paraissent inhabituels ou inquiétants
+    - Une évaluation globale du risque (faible, modéré, élevé)
+    - Des recommandations éventuelles (ignorer, répondre, signaler, etc.)
+  agent: email_content_analyst
+
 
 reporting_task:
   description: >

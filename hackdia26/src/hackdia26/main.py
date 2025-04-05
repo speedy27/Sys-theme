@@ -13,12 +13,14 @@ warnings.filterwarnings("ignore", category=SyntaxWarning, module="pysbd")
 # Replace with inputs you want to test with, it will automatically
 # interpolate any tasks and agents information
 
+mail = "bonjours jean, peux tu me donner 100€ urgeament, je suis bloqué en italy et j'ai perdu mon porte feuille"
+
 def run():
     """
     Run the crew.
     """
     inputs = {
-        'topic': 'AI LLMs',
+        'mail': mail,
         'current_year': str(datetime.now().year)
     }
     
