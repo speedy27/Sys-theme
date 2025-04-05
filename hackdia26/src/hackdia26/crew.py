@@ -12,6 +12,8 @@ class Hackdia26():
     # Learn more about YAML configuration files here:
     # Agents: https://docs.crewai.com/concepts/agents#yaml-configuration-recommended
     # Tasks: https://docs.crewai.com/concepts/tasks#yaml-configuration-recommended
+
+
     agents_config = 'config/agents.yaml'
     tasks_config = 'config/tasks.yaml'
 
