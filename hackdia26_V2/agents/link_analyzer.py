@@ -1,10 +1,12 @@
 import requests
 import base64
 import time
+import json
 
-# === CLÉS API ===
+# === CLÉS API FOURNIES ===
 VT_API_KEY = "44f476f9d7fa7bc5e17fd3d684daf305433690539cc8ef695079a611db891de0"
 URLSCAN_API_KEY = "0196069f-be55-752a-a032-f1f368c3ea4d"
+MISTRAL_API_KEY = "OZSyUAoFi2DmsjJz5Cuqg8vWeFzG9grq"
 
 # === VIRUSTOTAL ===
 def analyser_url_virustotal(url):
@@ -17,7 +19,7 @@ def analyser_url_virustotal(url):
         print("❌ VirusTotal - erreur de soumission :", response.text)
         return None
 
-    print("✅ URL soumise avec succès. ⏳ Attente de l’analyse...")
+    print("✅ URL soumise à VirusTotal. ⏳ Attente de l’analyse...")
     time.sleep(10)
 
     url_id = base64.urlsafe_b64encode(url.encode()).decode().strip("=")
@@ -26,28 +28,7 @@ def analyser_url_virustotal(url):
         print("❌ VirusTotal - erreur de rapport :", report_response.text)
         return None
 
-    data = report_response.json()["data"]["attributes"]
-
-    stats = data.get("last_analysis_stats", {})
-    categories = data.get("categories", {})
-    reputation = data.get("reputation", 0)
-    times_submitted = data.get("times_submitted", "N/A")
-    votes = data.get("total_votes", {})
-
-    print("\n🔍 Résultat détaillé de VirusTotal :")
-    print(f"🌐 URL analysée         : {url}")
-    print(f"📊 Statistiques         :")
-    print(f"   - Harmless           : {stats.get('harmless', 0)}")
-    print(f"   - Malicious          : {stats.get('malicious', 0)}")
-    print(f"   - Suspicious         : {stats.get('suspicious', 0)}")
-    print(f"   - Undetected         : {stats.get('undetected', 0)}")
-    print(f"   - Timeout            : {stats.get('timeout', 0)}")
-    print(f"🏷️  Catégories détectées : {categories if categories else 'Aucune'}")
-    print(f"⭐ Réputation VT         : {reputation}")
-    print(f"📥 Nombre de soumissions : {times_submitted}")
-    print(f"🗳️ Votes de la communauté : Malveillant={votes.get('malicious', 0)}, Bénin={votes.get('harmless', 0)}")
-
-    return data
+    return report_response.json()["data"]["attributes"]
 
 # === URLSCAN.IO ===
 def analyser_url_urlscan(url):
@@ -60,7 +41,7 @@ def analyser_url_urlscan(url):
         return None
 
     uuid = response.json().get("uuid")
-    print(f"\n📡 Lien soumis. UUID : {uuid}")
+    print(f"\n📡 Lien soumis à urlscan.io. UUID : {uuid}")
     time.sleep(10)
 
     result = requests.get(f"https://urlscan.io/api/v1/result/{uuid}/")
@@ -68,73 +49,63 @@ def analyser_url_urlscan(url):
         print("❌ urlscan.io - erreur de récupération :", result.text)
         return None
 
-    data = result.json()
+    return result.json()
 
-    # AFFICHAGE
-    task = data.get("task", {})
-    page = data.get("page", {})
-    verdict = data.get("verdicts", {}).get("overall", {})
-    lists = data.get("lists", {})
+# === ÉVALUATION PAR MISTRAL MEDIUM ===
+def evaluer_risque_avec_mistral(data_vt, data_urlscan):
+    headers = {
+        "Authorization": f"Bearer {MISTRAL_API_KEY}",
+        "Content-Type": "application/json"
+    }
+    api_url = "https://api.mistral.ai/v1/chat/completions"
 
-    print("\n🔍 Résultat du scan urlscan.io :")
-    print(f"🕒 Date           : {task.get('time')}")
-    print(f"🌍 URL soumise   : {task.get('url')}")
-    print(f"📥 URL finale    : {page.get('url')}")
-    print(f"🖼️  Titre         : {page.get('title')}")
-    print(f"🌐 Domaine       : {page.get('domain')}")
-    print(f"🏁 Pays          : {page.get('country')}")
-    print(f"🛡️ Verdicts      : {verdict}")
-    print(f"🔗 Liens trouvés : {len(lists.get('urls', []))} URL chargées")
-    print(f"📸 Screenshot    : {task.get('screenshotURL')}")
-    print(f"📝 Rapport complet : {task.get('reportURL')}")
+    prompt = f"""
+Tu es un expert en cybersécurité. Voici les résultats d’analyse de deux services.
 
-    return data
+=== Résultats VirusTotal ===
+Statistiques : {data_vt.get("last_analysis_stats")}
+Catégories : {data_vt.get("categories")}
+Réputation : {data_vt.get("reputation")}
+Votes : {data_vt.get("total_votes")}
+Soumissions : {data_vt.get("times_submitted")}
 
-# === IA : CLASSIFICATION ===
-def evaluer_et_expliquer_risque(data_vt, data_urlscan):
-    vt_stats = data_vt.get("last_analysis_stats", {})
-    vt_categories = data_vt.get("categories", {})
-    vt_votes = data_vt.get("total_votes", {})
-    vt_reputation = data_vt.get("reputation", 0)
-    malicious = vt_stats.get("malicious", 0)
-    suspicious = vt_stats.get("suspicious", 0)
+=== Résultats urlscan.io ===
+Page : {data_urlscan.get("page", {}).get("title")}
+Score : {data_urlscan.get("verdicts", {}).get("overall", {}).get("score")}
+Tags : {data_urlscan.get("verdicts", {}).get("overall", {}).get("tags")}
+Malicieux : {data_urlscan.get("verdicts", {}).get("overall", {}).get("malicious")}
 
-    verdict = data_urlscan.get("verdicts", {}).get("overall", {})
-    urlscan_score = verdict.get("score", 0)
-    urlscan_tags = verdict.get("tags", [])
-    urlscan_malicious = verdict.get("malicious", False)
-    title = data_urlscan.get("page", {}).get("title", "N/A")
-
-    # Classification finale
-    if malicious >= 10 or urlscan_score >= 5 or urlscan_malicious:
-        niveau = "❌ DANGEREUX"
-    elif malicious >= 3 or suspicious >= 1 or urlscan_score >= 2 or "suspicious" in urlscan_tags:
-        niveau = "⚠️ SUSPECT"
-    else:
-        niveau = "✅ SÛR"
-
-    explication = f"""\n🧠 Interprétation :
-Le lien est classé comme **{niveau}** car :
-- VirusTotal signale {malicious} moteurs malicieux, {suspicious} suspects
-- Catégories détectées : {vt_categories if vt_categories else 'Aucune'}
-- Réputation : {vt_reputation}, votes : {vt_votes}
-- urlscan.io indique score = {urlscan_score}, titre = \"{title}\", tags = {urlscan_tags}, malicieux = {urlscan_malicious}
+Donne un verdict parmi les suivants : ❌ DANGEREUX, ⚠️ SUSPECT, ✅ SÛR.
+Puis explique pourquoi de façon claire.
 """
 
-    return niveau, explication
+    body = {
+        "model": "mistral-medium",
+        "messages": [
+            {"role": "system", "content": "Tu es un assistant expert en cybersécurité."},
+            {"role": "user", "content": prompt}
+        ],
+        "temperature": 0.4,
+        "max_tokens": 600
+    }
 
-# === EXÉCUTION ===
+    response = requests.post(api_url, headers=headers, json=body)
+    if response.status_code != 200:
+        print("❌ Erreur Mistral :", response.text)
+        return None
+
+    return response.json()["choices"][0]["message"]["content"]
+
+# === EXÉCUTION PRINCIPALE ===
 if __name__ == "__main__":
     url = input("🔗 Entrez l’URL à analyser : ").strip()
-
-    print("\n📡 Lancement de l'analyse...")
 
     vt_data = analyser_url_virustotal(url)
     us_data = analyser_url_urlscan(url)
 
     if vt_data and us_data:
-        niveau, explication = evaluer_et_expliquer_risque(vt_data, us_data)
-        print(f"\n🔐 Verdict final : {niveau}")
-        print(explication)
+        resultat = evaluer_risque_avec_mistral(vt_data, us_data)
+        print("\n🔐 Verdict final (Mistral Medium) :\n")
+        print(resultat)
     else:
         print("❌ Impossible de conclure : une des deux analyses a échoué.")
